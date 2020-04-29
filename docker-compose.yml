@@ -1,0 +1,27 @@
+version: '3.4'
+
+services:
+  selenium:
+    image: selenium/standalone-chrome:3.141.59-dubnium
+#    environment:
+#      - "SCREEN_WIDTH=1920"
+#      - "SCREEN_HEIGHT=1080"
+#      - "SCREEN_DEPTH=24"
+#      - "SCREEN_DPI=74"
+    volumes:
+      - ./shared:/e2e/uploads
+      - ./shared:/tmp/downloads
+    shm_size: '2gb'
+    ports:
+      - "4444:4444"
+  pytaxerapi:
+    build: .
+    restart: unless-stopped
+    env_file:
+      -  .user.env
+    environment:
+      - "GRID_HUB=http://selenium:4444/wd/hub"
+      - "PORT=80"
+      - "HOST=0.0.0.0"
+    ports:
+      - "7080:80"

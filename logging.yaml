@@ -1,0 +1,38 @@
+version: 1
+disable_existing_loggers: false
+
+formatters:
+    standard:
+        format: "%(asctime)s %(levelname)-8s %(name)-20s %(message)s"
+        datefmt: "%Y-%m-%d %H:%M:%S"
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        #level: DEBUG
+        formatter: standard
+        stream: ext://sys.stdout
+
+root:
+    level: DEBUG
+    handlers: [console]
+    propogate: yes
+
+loggers:
+    taxer_api:
+        #level: INFO
+        #handlers: [console]
+        propagate: yes
+    taxer_driver:
+        #level: INFO
+        #handlers: [console]
+        propagate: yes
+
+    selenium_base:
+        #level: DEBUG
+        #handlers: [console]
+        propagate: yes
+    TaxerTokenDriver:
+        #level: DEBUG
+        #handlers: [console]
+        propagate: yes

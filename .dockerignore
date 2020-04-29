@@ -1,0 +1,7 @@
+__pycache__
+.idea
+logs
+venv
+test/
+geckodriver.*
+.git
