@@ -1,6 +1,7 @@
 from typing import List, Dict
 from flask_restx import Model, fields
 from decimal import Decimal, ROUND_HALF_EVEN
+import copy
 
 class NumberFixed(fields.NumberMixin, fields.Raw):
     """
@@ -17,6 +18,40 @@ class NumberFixed(fields.NumberMixin, fields.Raw):
             raise fields.MarshallingError("Invalid Fixed precision number.")
         return dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN)
 
+class ModelEx(Model):
+    def clone_except(self, name, except_keys:List[str], *parents):
+        def pop_nested(fields:dict, parts:List[str]):
+            if 1 == len(parts):
+                fields.pop(parts[0])
+            else:
+                pop_nested(fields[parts[0]], parts[1:])
+
+        fields:dict = self.wrapper()
+        for parent in parents:
+            fields.update(copy.deepcopy(parent))
+            for key in except_keys:
+                pop_nested(fields, key.split('.'))
+
+        return __class__(name, fields)
+
+
+def clone_except(name, except_keys:List[str], *parents):
+    def pop_nested(fields:dict, parts:List[str]):
+        if 1 == len(parts):
+            fields.pop(parts[0])
+        else:
+            pop_nested(fields[parts[0]].model, parts[1:])
+
+    fields:dict = Model.wrapper()
+    for parent in parents:
+        fields.update(copy.deepcopy(parent))
+        for key in except_keys:
+            pop_nested(fields, key.split('.'))
+
+    return Model(name, fields)
+
+Model.clone_except = clone_except
+
 paginator_model = Model('Paginator', {
     'currentPage': fields.Integer(description='Текущая страница'),
     'recordsOnPage': fields.Integer(description='Элементов на странице'),
@@ -24,13 +59,13 @@ paginator_model = Model('Paginator', {
 })
 
 user_model = Model('User', {
-    'id': fields.Integer(description='Идентификатор профиля'),
+    'id': fields.Integer(description='Идентификатор пользователя'),
     'idKey': fields.String(description='ИНН'),
     'titleName': fields.String(description='Имя профиля'),
     'isCompany': fields.Boolean(description='ООО/ФОП')
 })
 
-account_model = Model('Account', {
+profile_model = Model('Profile', {
     'accountId': fields.Integer(description='Идентификатор аккаунта'),
     'accountName': fields.String(description='Имя аккаунта'),
     'users': fields.List(fields.Nested(user_model), description='Зарегистрированные профили')
@@ -51,6 +86,16 @@ user_account_model = Model('UserAccount', {
     'tfBankCorrPlace': fields.String(description='Адрес банка-корреспондента'),
     'tfBankCorrSwift': fields.String(description='SWIFT банка-корреспондента'),
     'tfBankCorrAccount': fields.String(description='Счет в банке-корреспонденте'),
+})
+
+user_account_brief_model = Model('UserAccountBrief', {
+    'id': fields.Integer(description='Идентификатор счета'),
+    'title': fields.String(description='Название счета', allow_null=True, skip_none=True),
+    'currency': fields.String(description='Валоюта счета', allow_null=True, skip_none=True),
+})
+
+user_account_short_model = Model('UserAccountShort', {
+    'id': fields.Integer(description='Идентификатор счета'),
 })
 
 user_accounts_model = Model('UserAccounts', {
@@ -82,74 +127,110 @@ operations_brief_model = Model('OperationsBrief', {
     'operations': fields.List(fields.Nested(operation_brief_model), description='Операции'),
 })
 
-# operation_detail_model
 contractor_model = Model('Contractor', {
     'id': fields.Integer(description='Идентификатор заказчика'),
     'title': fields.String(description='Название заказчика', allow_null=True, skip_none=True),
 })
 
-operation_account_model = Model('OperationAccount', {
-    'id': fields.Integer(description='Идентификатор счета'),
-    'title': fields.String(description='Название счета', allow_null=True, skip_none=True),
-    'currency': fields.String(description='Валоюта счета', allow_null=True, skip_none=True),
+contractor_short_model = Model('ContractorShort', {
+    'id': fields.Integer(description='Идентификатор заказчика'),
 })
-
-add_operation_response_model = Model('AddOperationResponse', {
-    'id': fields.Integer(description='Идентификатор операции'),
-})
-
-operation_base_model = Model('OperationBase', {
-    'id': fields.Integer(description='Идентификатор операции'),
-    'date': fields.DateTime(description='Дата'),
-    'comment': fields.String(description='Коментарий', allow_null=True),
-})
-
-add_operation_base_model = Model('AddOperation', {
-    'date': fields.DateTime(description='Дата'),
-    'comment': fields.String(description='Коментарий', allow_null=True),
-})
-"""Withdrawal - перевод между счетами"""
-withdrawal_params:Dict = {
-    'outgoTotal': NumberFixed(description='Сумма перевода', decimals=2, allow_null=True, skip_none=True),
-    'outgoAccount': fields.Nested(operation_account_model, description='Счет списания', allow_null=True,
-                                  skip_none=True),
-    'incomeAccount': fields.Nested(operation_account_model, description='Счет зачисления', allow_null=True,
-                                   skip_none=True),
-}
 
 
 parent_model = Model('Parent', {
     'id': fields.Integer(description='Идентификатор'),
     'date': fields.DateTime(description='Дата', allow_null=True),
     'number': fields.String(description='Номер', allow_null=True),
-    'title': fields.String(description='title', allow_null=True),
-    'type': fields.String(description='type', allow_null=True),
+    'title': fields.String(description='Название', allow_null=True),
+    'type': fields.String(description='Тип', allow_null=True),
     'contractor':fields.Nested(contractor_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
 })
 
+parent_short_model = Model('ParentShort', {
+    'id': fields.Integer(description='Идентификатор'),
+})
 
-operation_withdrawal_model = operation_base_model.clone('OperationWithdrawal', withdrawal_params)
-add_operation_withdrawal_model = add_operation_base_model.clone('AddOperationWithdrawal', withdrawal_params)
+parent_short_type_model = Model('ParentShortType', {
+    'id': fields.Integer(description='Идентификатор'),
+    'type': fields.String(description='Тип', allow_null=True),
+})
 
+
+add_operation_response_model = Model('AddOperationResponse', {
+    'id': fields.Integer(description='Идентификатор операции'),
+})
+
+
+operation_base_common_params:Dict = {
+    'date': fields.DateTime(description='Дата'),
+    'comment': fields.String(description='Коментарий', allow_null=True),
+}
+operation_base_model = Model('OperationBase', {
+    'id': fields.Integer(description='Идентификатор операции'),
+    **operation_base_common_params
+})
+
+
+add_operation_base_model = Model('AddOperation', {**operation_base_common_params})
+
+"""Withdrawal - перевод между счетами"""
+
+operation_withdrawal_common_params:Dict = {
+    'outgoTotal': NumberFixed(description='Сумма перевода', decimals=2, allow_null=True, skip_none=True),
+}
+operation_withdrawal_model = operation_base_model.clone('OperationWithdrawal', {**operation_withdrawal_common_params,
+    'outgoAccount': fields.Nested(user_account_brief_model, description='Счет списания', allow_null=True,
+                                  skip_none=True),
+    'incomeAccount': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+                                   skip_none=True),
+})
+add_operation_withdrawal_model = add_operation_base_model.clone('AddOperationWithdrawal', {**operation_withdrawal_common_params,
+    'outgoAccount': fields.Nested(user_account_short_model, description='Счет списания', allow_null=True,
+                                  skip_none=True),
+    'incomeAccount': fields.Nested(user_account_short_model, description='Счет зачисления', allow_null=True,
+                                   skip_none=True),
+})
 
 """FlowIncome - доход"""
-flowincome_params:Dict = {
-    'financeType': fields.String(description='Тип дохода ("custom" - Основной; "custom_free" - Безвозмездно полученные товары и услуги; "tax_free" - Не учитываемый; "custom_debts" - Списанные задолжености;'
-                                             ' "tax15_1" - 15% Превышение основного дохода; "tax15_2" - 15% Не указанная в свидетельстве деятельность; "tax15_2" - 15% Запрещенные для ЕН расчеты)<br>'
-                                             'или <br>Тип расхода ("custom" - Основной; "esv" - Оплата ЕСВ; "en" - Оплата ЕН; "moneyback" - Возвращенные деньги)', allow_null=True),
+operation_flowincome_common_params:Dict = {
+    'financeType': fields.String(
+        description='Тип дохода ("custom" - Основной; "custom_free" - Безвозмездно полученные товары и услуги; "tax_free" - Не учитываемый; "custom_debts" - Списанные задолжености;'
+                    ' "tax15_1" - 15% Превышение основного дохода; "tax15_2" - 15% Не указанная в свидетельстве деятельность; "tax15_2" - 15% Запрещенные для ЕН расчеты)<br>'
+                    'или <br>Тип расхода ("custom" - Основной; "esv" - Оплата ЕСВ; "en" - Оплата ЕН; "moneyback" - Возвращенные деньги)',
+        allow_null=True),
     'total': NumberFixed(description='Сумма перевода', decimals=2, allow_null=True, skip_none=True),
     'payedSum': NumberFixed(description='Сумма по документу', decimals=2, allow_null=True, skip_none=True),
-    'account': fields.Nested(operation_account_model, description='Счет зачисления', allow_null=True,
-                                  skip_none=True),
+}
+flowincome_params:Dict = {
+    'account': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+                             skip_none=True),
     'contractor':fields.Nested(contractor_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
     'parent': fields.Nested(parent_model, description='Договор', allow_null=True,
                                 skip_none=True),
 
 }
-operation_flow_model = operation_base_model.clone('OperationFlow', flowincome_params)
-add_operation_flow_model = add_operation_base_model.clone('AddOperationFlow', flowincome_params)
+operation_flowincome_model = operation_base_model.clone('OperationFlowIncome', {**operation_flowincome_common_params,
+    'account': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+                             skip_none=True),
+    'contractor':fields.Nested(contractor_model, description='Контрагент', allow_null=True,
+                                  skip_none=True),
+    'parent': fields.Nested(parent_model, description='Договор', allow_null=True,
+                                skip_none=True),
+})
+add_operation_flowincome_model = add_operation_base_model.clone('AddOperationFlowIncome', {**operation_flowincome_common_params,
+    'account': fields.Nested(user_account_short_model, description='Счет зачисления', allow_null=True,
+                             skip_none=True),
+    'contractor':fields.Nested(contractor_short_model, description='Контрагент', allow_null=True,
+                                  skip_none=True),
+    'parent': fields.Nested(parent_short_model, description='Договор', allow_null=True,
+                                skip_none=True),
+})
+
+"""FlowOutgo - расход"""
+operation_flowoutgo_model = operation_flowincome_model.clone('OperationFlowOutgo')
+add_operation_flowoutgo_model = add_operation_flowincome_model.clone('AddOperationFlowOutgo')
 
 """CurrencyExchange - обмен валюты"""
 currency_exchange_model = operation_withdrawal_model.clone('CurrencyExchange', {
@@ -160,27 +241,38 @@ currency_exchange_model = operation_withdrawal_model.clone('CurrencyExchange', {
 add_currency_exchange_model = add_operation_withdrawal_model.clone('AddCurrencyExchange', {
     'incomeCurrency': NumberFixed(description='Курс', decimals=2, allow_null=True, skip_none=True),
 })
+
 """AutoExchange - валютный доход"""
-auto_exchange_params:Dict = {
+auto_exchange_common_params:Dict = {
     'payedSum': NumberFixed(description='Сумма по документу', decimals=2, allow_null=True, skip_none=True),
-    'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
-    'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
     'uahDate': fields.DateTime(description='Дата обязательной продажи'),
-    'uahTotal': NumberFixed(description='Сумма в UAH обязательной продажи', decimals=2, allow_null=True, skip_none=True),
-    'uahAccount': fields.Nested(operation_account_model, description='Счет зачисления при обязательной продаже', allow_null=True, skip_none=True),
-    'currencyAccount': fields.Nested(operation_account_model, description='Валютный счет', allow_null=True, skip_none=True),
-    'currencyTotal': NumberFixed(description='Сумма зашедшая на валютный счет', decimals=2, allow_null=True, skip_none=True),
+    'uahTotal': NumberFixed(description='Сумма в UAH обязательной продажи', decimals=2, allow_null=True,
+                            skip_none=True),
+    'currencyTotal': NumberFixed(description='Сумма зашедшая на валютный счет', decimals=2, allow_null=True,
+                                 skip_none=True),
 }
 
-auto_exchange_model = operation_base_model.clone('AutoExchange', auto_exchange_params)
-add_auto_exchange_model = add_operation_base_model.clone('AddAutoExchange', auto_exchange_params)
+auto_exchange_model = operation_base_model.clone('AutoExchange', {**auto_exchange_common_params,
+ 'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
+ 'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
+ 'uahAccount': fields.Nested(user_account_brief_model, description='Счет зачисления при обязательной продаже',
+                             allow_null=True, skip_none=True),
+ 'currencyAccount': fields.Nested(user_account_brief_model, description='Валютный счет', allow_null=True,
+                                  skip_none=True),
+})
+add_auto_exchange_model = add_operation_base_model.clone('AddAutoExchange', {**auto_exchange_common_params,
+ 'parent': fields.Nested(parent_short_type_model, description='Договор', allow_null=True, skip_none=True),
+ 'contractor': fields.Nested(contractor_short_model, description='Контрагент', allow_null=True, skip_none=True),
+ 'uahAccount': fields.Nested(user_account_short_model, description='Счет зачисления при обязательной продаже',
+                             allow_null=True, skip_none=True),
+ 'currencyAccount': fields.Nested(user_account_short_model, description='Валютный счет', allow_null=True,
+                                  skip_none=True),
+})
 
-"""Documents"""
-
-document_model_brief = Model('DocumentBrief', {
+"""********************************   Documents ******************************"""
+document_brief_params:Dict = {
     'id': fields.Integer(description='Идентификатор документа'),
     'date': fields.DateTime(description='Дата создания/подписания документа'),
-    'expireDate': fields.DateTime(description='Дата окончания действия документа'),
     'type': fields.String(description='Тип документа'),
     'direction': fields.Integer(description='0 - продажа, 1 покупка??'),
     'number': fields.String(description='Номер документа'),
@@ -190,10 +282,48 @@ document_model_brief = Model('DocumentBrief', {
     'total': NumberFixed(description='Сумма документа', decimals=2, allow_null=True, skip_none=True),
     'title': fields.String(description='Название документа'),
     'comment': fields.String(description='Коментарий'),
-    'description': fields.String(description='Описание'),
-    'place': fields.String(description='Место'),
+}
+
+new_document_params:Dict = {
+    'date': fields.DateTime(description='Дата создания/подписания документа'),
+    'direction': fields.Integer(description='0 - продажа, 1 покупка??'),
+    'number': fields.String(description='Номер документа'),
+    'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
+    'currency': fields.String(description='Валюта документа'),
+    'total': NumberFixed(description='Сумма документа', decimals=2, allow_null=True, skip_none=True),
+    'title': fields.String(description='Название документа'),
+    'comment': fields.String(description='Коментарий'),
+}
+
+
+document_model_brief = Model('DocumentBrief', {**document_brief_params,
     'path': fields.String(description='URL для получения полной информации по операции'),
 })
+
+#new_document_params = document_brief_params.copy()
+#del new_document_params['id']
+#del new_document_params['type']
+#del new_document_params['paid']
+
+document_contract_params = {
+    'expireDate': fields.DateTime(description='Дата окончания действия документа'),
+    'description': fields.String(description='Описание'),
+    'place': fields.String(description='Место'),
+}
+
+document_contract_model = Model('DocumentContract', {**document_brief_params, **document_contract_params})
+add_document_contract_model = ModelEx('AddDocumentContract', {**new_document_params, **document_contract_params})
+document_act_params = {
+    'account': fields.Nested(user_account_brief_model, description='Счет', allow_null=True, skip_none=True),
+    'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
+    'nds': fields.Integer(description='НДС'),
+    'actPlace': fields.String(description='Место'),
+    'actType': fields.String(description='actType'),
+    'actPrintType': fields.String(description='actPrintType'),
+    'isForeign': fields.Integer(description='isForeign'),
+}
+document_act_model = Model('DocumentAct', {**document_brief_params, **document_act_params})
+add_document_act_model = Model('AddDocumentAct', {**new_document_params, **document_act_params})
 
 documents_model = Model('Documents', {
     'paginator': fields.Nested(paginator_model, description='Страницы'),
@@ -205,14 +335,15 @@ add_document_response_model = Model('AddDocumentResponse', {
 })
 
 
-models:List[Model] = [paginator_model, user_model, account_model, user_account_model, user_accounts_model, operation_brief_content_model, operation_brief_model
-                      , operations_brief_model, contractor_model, document_model_brief, documents_model, operation_account_model, add_operation_response_model
+models:List[Model] = [paginator_model, user_model, profile_model, user_account_model, user_accounts_model, user_account_brief_model, user_account_short_model, operation_brief_content_model, operation_brief_model
+                      , operations_brief_model, contractor_model, contractor_short_model, document_model_brief, document_contract_model, document_act_model, documents_model, add_operation_response_model
                       , add_operation_base_model
 
-                      , operation_base_model, parent_model
+                      , operation_base_model, parent_model, parent_short_model, parent_short_type_model
                       , operation_withdrawal_model, add_operation_withdrawal_model
-                      , operation_flow_model, add_operation_flow_model
+                      , operation_flowincome_model, add_operation_flowincome_model
+                      , operation_flowoutgo_model, add_operation_flowoutgo_model
                       , currency_exchange_model, add_currency_exchange_model
                       , auto_exchange_model, add_auto_exchange_model
-                      , add_document_response_model
+                      , add_document_contract_model, add_document_act_model, add_document_response_model
                       ]

@@ -3,7 +3,7 @@ from flask import Flask
 from .model import models
 from .account import ns as ns_account
 from .bank_account import ns as ns_bank_account
-from .user import ns as ns_user
+from .user_document import ns as ns_user
 from .user_operation import  ns as ns_operation
 
 def create_application(config_filename:str = None) -> Flask:

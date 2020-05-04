@@ -2,10 +2,12 @@ from typing import List
 import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
 import app
-from .model import operation_brief_model, operations_brief_model, \
-    operation_withdrawal_model, add_operation_withdrawal_model, add_operation_response_model, \
-    operation_flow_model, add_operation_flow_model, \
-    currency_exchange_model, add_currency_exchange_model, auto_exchange_model, add_auto_exchange_model
+from .model import *
+#from .model import operation_brief_model, operations_brief_model, \
+#    operation_withdrawal_model, add_operation_withdrawal_model, add_operation_response_model, \
+#    operation_flowincome_model, add_operation_flowincome_model, \
+#    operation_flowoutgo_model, add_operation_flowoutgo_model, \
+#    currency_exchange_model, add_currency_exchange_model, auto_exchange_model, add_auto_exchange_model
 from taxer_model import OperationBrief, OperationsBrief, OperationDetail, SetOperation, AddOperation
 
 ns = Namespace('operation', description='Операции', path="/user/<int:userId>")
@@ -69,25 +71,25 @@ class AddWithdrawalOperation(Resource):
         print('api.payload', self.api.payload)
         setop_schema = marshmallow_dataclass.class_schema(SetOperation)
         op:SetOperation = setop_schema().load(self.api.payload)
-        op.id = None
+        #op.id = None
         op.type = 'Withdrawal'
         return app.taxerApi.add_operation(userId, op)
 
 
-"""FlowOut - Расход"""
+"""FlowOutgo - Расход"""
 
 @ns.route('/operation/flowoutgo/<int:operationId>')
 @ns.param('userId', 'Идентификатор профиля')
 @ns.param('operationId', 'Идентификатор операции')
 class FlowOutgoOperation(Resource):
-    @ns.marshal_with(operation_flow_model)
+    @ns.marshal_with(operation_flowoutgo_model)
     def get(self, userId: int, operationId: int):
         '''Возвращает _полные_ данные по "Расходу"'''
         return app.taxerApi.operation_detail(userId, operationId, 'FlowOutgo')
 @ns.route('/operation/flowoutgo')
 @ns.param('userId', 'Идентификатор профиля')
 class AddFlowOutgoOperation(Resource):
-    @ns.expect(add_operation_flow_model, validate=True)
+    @ns.expect(add_operation_flowoutgo_model, validate=True)
     @ns.marshal_with(add_operation_response_model)
     def post(self, userId: int):
         '''Добавление Расход-а'''
@@ -108,7 +110,7 @@ class AddFlowOutgoOperation(Resource):
 @ns.param('userId', 'Идентификатор профиля')
 @ns.param('operationId', 'Идентификатор операции')
 class FlowIncomeOperation(Resource):
-    @ns.marshal_with(operation_flow_model)
+    @ns.marshal_with(operation_flowincome_model)
     def get(self, userId: int, operationId: int):
         '''Возвращает _полные_ данные по "Доходу"'''
         return app.taxerApi.operation_detail(userId, operationId, 'FlowIncome')
@@ -116,7 +118,7 @@ class FlowIncomeOperation(Resource):
 @ns.route('/operation/flowincome')
 @ns.param('userId', 'Идентификатор профиля')
 class AddFlowIncomeOperation(Resource):
-    @ns.expect(add_operation_flow_model, validate=True)
+    @ns.expect(add_operation_flowincome_model, validate=True)
     @ns.marshal_with(add_operation_response_model)
     def post(self, userId: int):
         '''Добавление Доход-а'''

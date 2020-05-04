@@ -15,6 +15,6 @@ setup(name='py_taxer_api',
             'flask-restx',
             'marshmallow-dataclass',
             'marshmallow-union',
-            'ujson',
+            'ujson'
       ],
       zip_safe=False)

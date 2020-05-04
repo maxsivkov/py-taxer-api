@@ -14,7 +14,7 @@
 * Открываем браузерный отладчик (обычно F12)
 * Переходим во вкладку Console
 * В консоли выполняем `document.cookie`
-* Копируем эти данные. Это будет наша переменная **TAXER_COOKIES**
+* Копируем эти данные (без кавычек). Это будет наша переменная **TAXER_COOKIES**
 * Taxer выдает куки где-то на 1 неделю, т.е. через неделю они заекспайрятся и нужно будет проделать всю процедуру заново
  
 ## Запуск с помощью cookies
@@ -34,6 +34,39 @@ TAXER_COOKIES=_ga=GA1.2.147289...b28852cb2da6033936efb; XSRF-TOKEN=02da4f9ff62e0
 - проверить работу: открыть в браузере http://localhost:7080/docs и попробовать прочитать учетную запись (раздел *account*)
 - для завершения работы в консоли нужно нажать Ctrl-C
 - В случае возникновения ошибок в консоли будут писаться сообщения. По ним в принципе можно понять что происходит
+
+### Вручную
+* Требуется установленный [Python](https://www.python.org/downloads/) 3.7 или выше вместе с установленным [virtualenv](https://virtualenv.pypa.io/en/latest/) (`pip install virtualenv`)
+* Требуется установленная [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) с пакетом _MSVC v142 - VS 2019 C++ x64/x86 build tools (v14.25)_ 
+* Cклонировать проект. Репозиторий можэно склонировать с помощью [Git](https://git-scm.com/download) а можно скачать в виде [zip архива](https://github.com/maxsivkov/py-taxer-api/archive/master.zip) 
+    ```
+    git clone https://github.com/maxsivkov/py-taxer-api.git
+    ```
+* Pапустить коммандную строку _x64 Native Tools Command Prompt for VS 2019_ либо _x86 Native Tools Command Prompt for VS 2019_ в зависимости от битности установленного python из `Start Menu -> Programs -> Visual Studio 2019 -> Visual Studio Tools -> VC` 
+* Перейти в корень проекта
+    ```bash
+    cd py-taxer-api
+    ```
+* Устанавливаем virtualenv для проекта 
+    ```bash
+    virtualenv venv
+    ```
+* активируем 
+    ```bash
+    venv\Scripts\activate
+    ```
+* инсталируем
+    ```bash
+    pip install .
+    ```
+* устанавливаем переменную среды **TAXER_COOKIES**
+    ```bash
+    set TAXER_COOKIES=ga=GA1.2.147289...b28852cb2da6033936efb; XSRF-TOKEN=02da4f9ff62e0f7...4e1217a; _gat=1
+    ```
+* запускаем
+    ```bash
+    flask run --port 7080 --host=0.0.0.0 --no-reload
+    ```
 
 ## Запуск с помощью username/password
 В этом режиме никакие махинации с cookies не требуются, т.к. приложение с помощью [Selenium](https://www.selenium.dev/) само выполнит логин и получит cookies.
@@ -56,5 +89,37 @@ TAXER_PWD=mypassword
 - для завершения работы в консоли нужно нажать Ctrl-C
 - В случае возникновения ошибок в консоли будут писаться сообщения. По ним в принципе можно понять что происходит
 
-### Вручную (требуется установленный Python 3.7 или выше)
-TODO
+### Вручную
+* Требуется установленный [Python](https://www.python.org/downloads/) 3.7 или выше вместе с установленным [virtualenv](https://virtualenv.pypa.io/en/latest/) (`pip install virtualenv`)
+* Требуется установленная [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) с пакетом _MSVC v142 - VS 2019 C++ x64/x86 build tools (v14.25)_ 
+* Требуется установленный [Firefox Browser](https://www.mozilla.org/en-US/firefox/new/) и [gecodriver WebDriver](https://github.com/mozilla/geckodriver/releases)
+* Cклонировать проект. Репозиторий можэно склонировать с помощью [Git](https://git-scm.com/download) а можно скачать в виде [zip архива](https://github.com/maxsivkov/py-taxer-api/archive/master.zip) 
+    ```
+    git clone https://github.com/maxsivkov/py-taxer-api.git
+    ```
+* Pапустить коммандную строку _x64 Native Tools Command Prompt for VS 2019_ либо _x86 Native Tools Command Prompt for VS 2019_ в зависимости от битности установленного python из `Start Menu -> Programs -> Visual Studio 2019 -> Visual Studio Tools -> VC` 
+* Перейти в корень проекта
+    ```bash
+    cd py-taxer-api
+    ```
+* Устанавливаем virtualenv для проекта 
+    ```bash
+    virtualenv venv
+    ```
+* активируем 
+    ```bash
+    venv\Scripts\activate
+    ```
+* инсталируем
+    ```bash
+    pip install .
+    ```
+* устанавливаем переменные среды **TAXER_USER** и **TAXER_PWD**
+    ```bash
+    set TAXER_USER=username@domain.com
+    set TAXER_PWD=mypassword
+    ```
+* запускаем
+    ```bash
+    flask run --port 7080 --host=0.0.0.0 --no-reload
+    ```

@@ -1,6 +1,6 @@
 import logging
 import requests
-import json
+import ujson
 from collections import namedtuple
 from taxer_model import *
 
@@ -36,6 +36,7 @@ class TaxerApi:
         self.logger.debug('response status_code {}'.format(response.status_code))
         self.logger.debug('response headers\n{}'.format('\n'.join([f'{k}: {v}' for k, v in response.headers.items()])))
         self.logger.debug('response body {}'.format(response.content))
+        self.logger.debug('response text {}'.format(response.text))
         self.logger.debug('response json {}'.format(response.json()))
 
         response.raise_for_status()
@@ -95,15 +96,16 @@ class TaxerApi:
 
         return result
 
-    def add_operation(self, userId:int, op:SetOperation) -> AddOperationResponse:
+    def add_operation(self, userId:int, op:SetOperation) -> AddEntityResponse:
+        exclude = ['operation.date', 'operation.uahDate']
         self.logger.debug('add_operation @ {} ->'.format(userId))
-        payload_schema = marshmallow_dataclass.class_schema(AddOperation)
+        payload_schema = marshmallow_dataclass.class_schema(AddOperation, base_schema=IgnoreNoneSchema)
         payload:AddOperation = AddOperation(userId, op)
         #print('payload raw ', payload)
-        #print('payload json ', payload_schema(exclude=['operation.date']).dumps(payload, ensure_ascii=False))
-        json = self.execute('POST', 'api/finances/operation/create?lang={}'.format(self.lang), json=payload_schema(exclude=['operation.date']).dump(payload))
+        #print('payload json ', payload_schema(exclude=exclude).dumps(payload, ensure_ascii=False))
+        json = self.execute('POST', 'api/finances/operation/create?lang={}'.format(self.lang), json=payload_schema(exclude=exclude).dump(payload))
         self.logger.debug('operations_detail @ {} <-'.format(userId))
-        schema = marshmallow_dataclass.class_schema(AddOperationResponse)
+        schema = marshmallow_dataclass.class_schema(AddEntityResponse)
         return schema().load(json, partial=True, unknown=EXCLUDE)
 
     def user_accounts(self, userId: int, pageNumber: int = 1) -> UserAccounts:
@@ -142,3 +144,15 @@ class TaxerApi:
         })
         schema = marshmallow_dataclass.class_schema(Document)
         return schema().load(json)
+    def add_document(self, userId:int, doc:Document) -> AddEntityResponse:
+        exclude=['document.date', 'document.expireDate']
+        self.logger.debug('add_document @ {} ->'.format(userId))
+        payload_schema = marshmallow_dataclass.class_schema(AddDocument, base_schema=IgnoreNoneSchema)
+        payload:AddDocument = AddDocument(userId, doc)
+        #print('payload raw ', payload)
+        #print('payload json ', payload_schema(exclude=exclude).dumps(payload, ensure_ascii=False))
+        json = self.execute('POST', f'api/finances/document/create?lang={self.lang}', json=payload_schema(exclude=exclude).dump(payload))
+        #json = {'id': 1}
+        self.logger.debug('add_document @ {} <-'.format(userId))
+        schema = marshmallow_dataclass.class_schema(AddEntityResponse)
+        return schema().load(json, partial=True, unknown=EXCLUDE)

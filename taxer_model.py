@@ -1,11 +1,22 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
-from marshmallow import Schema, fields
+from marshmallow import Schema, fields, post_dump
 from marshmallow.utils import EXCLUDE, INCLUDE
 from decimal import *
 from datetime import datetime
 import ujson
 #-----------------------------------------------------
+
+class IgnoreNoneSchema(Schema):
+    @post_dump
+    def remove_skip_values(self, data, many, **kwargs):
+        return {
+            key: value for key, value in data.items()
+            if value is not None
+        }
+
+#-----------------------------------------------------
+
 @dataclass
 class User:
     id:int= field(default=None)
@@ -135,29 +146,6 @@ class Contractor(ContractorBrief):
         unknown=EXCLUDE
 
 @dataclass
-class Document(TimestampContent, ExpireTimestamp):
-    id: int= field(default=None)
-    type: str= field(default=None) #"contract"
-    direction: int = field(default=None) # 0 - продажа, 1 покупка??
-    number: str= field(default=None)
-    contractor:ContractorBrief= field(default=None)
-    currency: str = field(default=None)
-    paid: Decimal = field(default=None)
-    total: Decimal = field(default=None)
-    title: str= field(default=None)
-    comment: str= field(default=None)
-    description: str = field(default=None)
-    place: str = field(default=None)
-
-    """Resolve multiple inheritance"""
-    def __post_init__(self):
-        TimestampContent.__post_init__(self)
-        ExpireTimestamp.__post_init__(self)
-
-    class Meta:
-        unknown=EXCLUDE
-
-@dataclass
 class Parent(TimestampContent):
     id:int = field(default=None)
     type: str = field(default=None)
@@ -174,6 +162,37 @@ class Parent(TimestampContent):
     class Meta:
         unknown = EXCLUDE
         render_module = ujson
+
+@dataclass
+class Document(TimestampContent, ExpireTimestamp):
+    id: int= field(default=None)
+    type: str= field(default=None) #"contract"
+    direction: int = field(default=None) # 0 - продажа, 1 покупка??
+    number: str= field(default=None)
+    contractor:ContractorBrief= field(default=None)
+    currency: str = field(default=None)
+    paid: Decimal = field(default=None)
+    total: Decimal = field(default=None)
+    title: str= field(default=None)
+    comment: str= field(default=None)
+    description: str = field(default=None)
+    place: str = field(default=None)
+    account: OperationAccount = field(default=None)
+    parent:Parent = field(default=None)
+    nds: int = field(default=None)
+    actPlace: str = field(default=None)
+    actType: str = field(default=None)
+    actPrintType: str = field(default=None)
+    isForeign: int = field(default=None)
+    file:Dict[str,str] = field(default=None)
+    """Resolve multiple inheritance"""
+    def __post_init__(self):
+        TimestampContent.__post_init__(self)
+        ExpireTimestamp.__post_init__(self)
+
+    class Meta:
+        unknown=EXCLUDE
+
 
 @dataclass
 class ExchangeDifference:
@@ -247,7 +266,6 @@ class UserDocuments:
     class Meta:
         unknown=EXCLUDE
 
-
 # -----------------------------------------------------
 @dataclass
 class SetOperation(TimestampContent, UahTimestampContent):
@@ -290,7 +308,16 @@ class AddOperation:
         render_module = ujson
 
 @dataclass
-class AddOperationResponse:
+class AddDocument:
+    userId:int = field(default=None)
+    document: Document = field(default=None)
+    class Meta:
+        unknown = EXCLUDE
+        render_module = ujson
+
+
+@dataclass
+class AddEntityResponse:
     id: int
     class Meta:
         unknown = EXCLUDE

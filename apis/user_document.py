@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Dict
 import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
 import app
-from .model import user_accounts_model, user_account_model, document_model_brief, documents_model,add_document_response_model
+from .model import document_model_brief, document_contract_model,document_act_model, documents_model,add_document_response_model, \
+    add_document_contract_model, add_document_act_model
 from taxer_model import UserDocuments, Document
 ns = Namespace('document', description='Банковские счета и документы', path="/user/<int:userId>")
 
@@ -45,23 +46,24 @@ class UserDocumentsAll(Resource):
 @ns.param('docId', 'Идентификатор документа')
 @ns.response(500, 'Shit happens')
 class UserDocumentContract(Resource):
-    @ns.marshal_with(document_model_brief)
+    @ns.marshal_with(document_contract_model)
     def get(self, userId:int, docId:int):
         '''Возвращает расширенные свойства контракта для профиля'''
         return app.taxerApi.document(userId, docId, 'contract')
 @ns.route('/document/contract')
 @ns.param('userId', 'Идентификатор профиля')
 class AddUserDocumentContract(Resource):
-    @ns.expect(document_model_brief, validate=True)
+    @ns.expect(add_document_contract_model, validate=True)
     @ns.marshal_with(add_document_response_model)
     def post(self, userId:int):
-        '''Перевод между счетами'''
+        '''Добавление документа типа Договор'''
         print('api.payload', self.api.payload)
-        #setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        #op:SetOperation = setop_schema().load(self.api.payload)
-        #op.id = None
-        #op.type = 'contract'
-        #return app_taxer_api.taxerApi.add_operation(userId, op)
+        schema = marshmallow_dataclass.class_schema(Document)
+        doc:Document = schema().load(self.api.payload)
+        doc.id = None
+        doc.type = 'contract'
+        doc.file = {}
+        return app.taxerApi.add_document(userId, doc)
 
 
 @ns.route('/document/act/<int:docId>')
@@ -69,7 +71,7 @@ class AddUserDocumentContract(Resource):
 @ns.param('docId', 'Идентификатор документа')
 @ns.response(500, 'Shit happens')
 class UserDocumentAct(Resource):
-    @ns.marshal_with(document_model_brief)
+    @ns.marshal_with(document_act_model)
     def get(self, userId:int, docId:int):
         '''Возвращает расширенные свойства акта для профиля'''
         return app.taxerApi.document(userId, docId, 'act')
