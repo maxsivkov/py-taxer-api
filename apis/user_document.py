@@ -2,8 +2,7 @@ from typing import List, Dict
 import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
 import app
-from .model import document_model_brief, document_contract_model,document_act_model, documents_model,add_document_response_model, \
-    add_document_contract_model, add_document_act_model
+from .model import *
 from taxer_model import UserDocuments, Document
 ns = Namespace('document', description='Банковские счета и документы', path="/user/<int:userId>")
 
@@ -33,7 +32,7 @@ class UserDocumentsPage(Resource):
 @ns.param('userId', 'Идентификатор профиля')
 @ns.response(500, 'Shit happens')
 class UserDocumentsAll(Resource):
-    @ns.marshal_list_with(document_model_brief)
+    @ns.marshal_list_with(document_brief_model)
     def get(self, userId:int):
         '''Возвращает _все_ документы для профиля'''
         docs: List[Document] = app.taxerApi.documents_all(userId)
@@ -60,7 +59,6 @@ class AddUserDocumentContract(Resource):
         print('api.payload', self.api.payload)
         schema = marshmallow_dataclass.class_schema(Document)
         doc:Document = schema().load(self.api.payload)
-        doc.id = None
         doc.type = 'contract'
         doc.file = {}
         return app.taxerApi.add_document(userId, doc)

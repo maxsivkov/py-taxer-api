@@ -268,41 +268,9 @@ class UserDocuments:
 
 # -----------------------------------------------------
 @dataclass
-class SetOperation(TimestampContent, UahTimestampContent):
-    type: str = field(default=None)
-    comment: str = field(default=None)
-    outgoTotal: Decimal = field(default=None)
-    outgoAccount: OperationAccount = field(default=None)
-    incomeAccount: OperationAccount = field(default=None)
-
-    payedSum: Decimal = field(default=None)
-    total: Decimal = field(default=None)
-    contractor : ContractorBrief = field(default=None)
-    account: OperationAccount = field(default=None)
-    financeType: str = field(default=None)
-    parent: Parent = field(default=None)
-
-    incomeCurrency:Decimal = field(default=None)
-
-    uahTotal: Decimal = field(default=None)
-    uahAccount: OperationAccount = field(default=None)
-    currencyAccount: OperationAccount = field(default=None)
-    currencyTotal: Decimal = field(default=None)
-
-
-    """Resolve multiple inheritance"""
-    def __post_init__(self):
-        TimestampContent.__post_init__(self)
-        UahTimestampContent.__post_init__(self)
-
-    class Meta:
-        unknown = EXCLUDE
-        render_module = ujson
-
-@dataclass
 class AddOperation:
     userId:int = field(default=None)
-    operation: SetOperation = field(default=None)
+    operation: OperationDetail = field(default=None)
     class Meta:
         unknown = EXCLUDE
         render_module = ujson

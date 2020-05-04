@@ -18,40 +18,6 @@ class NumberFixed(fields.NumberMixin, fields.Raw):
             raise fields.MarshallingError("Invalid Fixed precision number.")
         return dvalue.quantize(self.precision, rounding=ROUND_HALF_EVEN)
 
-class ModelEx(Model):
-    def clone_except(self, name, except_keys:List[str], *parents):
-        def pop_nested(fields:dict, parts:List[str]):
-            if 1 == len(parts):
-                fields.pop(parts[0])
-            else:
-                pop_nested(fields[parts[0]], parts[1:])
-
-        fields:dict = self.wrapper()
-        for parent in parents:
-            fields.update(copy.deepcopy(parent))
-            for key in except_keys:
-                pop_nested(fields, key.split('.'))
-
-        return __class__(name, fields)
-
-
-def clone_except(name, except_keys:List[str], *parents):
-    def pop_nested(fields:dict, parts:List[str]):
-        if 1 == len(parts):
-            fields.pop(parts[0])
-        else:
-            pop_nested(fields[parts[0]].model, parts[1:])
-
-    fields:dict = Model.wrapper()
-    for parent in parents:
-        fields.update(copy.deepcopy(parent))
-        for key in except_keys:
-            pop_nested(fields, key.split('.'))
-
-    return Model(name, fields)
-
-Model.clone_except = clone_except
-
 paginator_model = Model('Paginator', {
     'currentPage': fields.Integer(description='Текущая страница'),
     'recordsOnPage': fields.Integer(description='Элементов на странице'),
@@ -224,7 +190,7 @@ add_operation_flowincome_model = add_operation_base_model.clone('AddOperationFlo
                              skip_none=True),
     'contractor':fields.Nested(contractor_short_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
-    'parent': fields.Nested(parent_short_model, description='Договор', allow_null=True,
+    'parent': fields.Nested(parent_short_type_model, description='Договор', allow_null=True,
                                 skip_none=True),
 })
 
@@ -296,9 +262,9 @@ new_document_params:Dict = {
 }
 
 
-document_model_brief = Model('DocumentBrief', {**document_brief_params,
+document_brief_model = Model('DocumentBrief', {**document_brief_params,
     'path': fields.String(description='URL для получения полной информации по операции'),
-})
+                                               })
 
 #new_document_params = document_brief_params.copy()
 #del new_document_params['id']
@@ -311,8 +277,10 @@ document_contract_params = {
     'place': fields.String(description='Место'),
 }
 
+"""contract - Договор"""
+
 document_contract_model = Model('DocumentContract', {**document_brief_params, **document_contract_params})
-add_document_contract_model = ModelEx('AddDocumentContract', {**new_document_params, **document_contract_params})
+add_document_contract_model = Model('AddDocumentContract', {**new_document_params, **document_contract_params})
 document_act_params = {
     'account': fields.Nested(user_account_brief_model, description='Счет', allow_null=True, skip_none=True),
     'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
@@ -327,7 +295,7 @@ add_document_act_model = Model('AddDocumentAct', {**new_document_params, **docum
 
 documents_model = Model('Documents', {
     'paginator': fields.Nested(paginator_model, description='Страницы'),
-    'documents': fields.List(fields.Nested(document_model_brief), description='Документы'),
+    'documents': fields.List(fields.Nested(document_brief_model), description='Документы'),
 })
 
 add_document_response_model = Model('AddDocumentResponse', {
@@ -336,7 +304,7 @@ add_document_response_model = Model('AddDocumentResponse', {
 
 
 models:List[Model] = [paginator_model, user_model, profile_model, user_account_model, user_accounts_model, user_account_brief_model, user_account_short_model, operation_brief_content_model, operation_brief_model
-                      , operations_brief_model, contractor_model, contractor_short_model, document_model_brief, document_contract_model, document_act_model, documents_model, add_operation_response_model
+                      , operations_brief_model, contractor_model, contractor_short_model, document_brief_model, document_contract_model, document_act_model, documents_model, add_operation_response_model
                       , add_operation_base_model
 
                       , operation_base_model, parent_model, parent_short_model, parent_short_type_model

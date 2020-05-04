@@ -3,12 +3,7 @@ import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
 import app
 from .model import *
-#from .model import operation_brief_model, operations_brief_model, \
-#    operation_withdrawal_model, add_operation_withdrawal_model, add_operation_response_model, \
-#    operation_flowincome_model, add_operation_flowincome_model, \
-#    operation_flowoutgo_model, add_operation_flowoutgo_model, \
-#    currency_exchange_model, add_currency_exchange_model, auto_exchange_model, add_auto_exchange_model
-from taxer_model import OperationBrief, OperationsBrief, OperationDetail, SetOperation, AddOperation
+from taxer_model import OperationBrief, OperationsBrief, OperationDetail
 
 ns = Namespace('operation', description='Операции', path="/user/<int:userId>")
 
@@ -69,9 +64,8 @@ class AddWithdrawalOperation(Resource):
     def post(self, userId:int):
         '''Перевод между счетами'''
         print('api.payload', self.api.payload)
-        setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        op:SetOperation = setop_schema().load(self.api.payload)
-        #op.id = None
+        setop_schema = marshmallow_dataclass.class_schema(OperationDetail)
+        op:OperationDetail = setop_schema().load(self.api.payload)
         op.type = 'Withdrawal'
         return app.taxerApi.add_operation(userId, op)
 
@@ -94,14 +88,9 @@ class AddFlowOutgoOperation(Resource):
     def post(self, userId: int):
         '''Добавление Расход-а'''
         print('api.payload', self.api.payload)
-        setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        op: SetOperation = setop_schema().load(self.api.payload)
-        op.id = None
+        setop_schema = marshmallow_dataclass.class_schema(OperationDetail)
+        op: OperationDetail = setop_schema().load(self.api.payload)
         op.type = 'FlowOutgo'
-        #if None == op.financeType:
-        #    op.financeType = 'esv'
-        if None != op.parent:
-            op.parent.type = 'contract'
         return app.taxerApi.add_operation(userId, op)
 
 """FlowIncome - Доход"""
@@ -123,14 +112,11 @@ class AddFlowIncomeOperation(Resource):
     def post(self, userId: int):
         '''Добавление Доход-а'''
         print('api.payload', self.api.payload)
-        setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        op: SetOperation = setop_schema().load(self.api.payload)
-        op.id = None
+        setop_schema = marshmallow_dataclass.class_schema(OperationDetail)
+        op: OperationDetail = setop_schema().load(self.api.payload)
         op.type = 'FlowIncome'
         if None == op.financeType:
             op.financeType = 'custom'
-        if None != op.parent:
-            op.parent.type = 'contract'
         return app.taxerApi.add_operation(userId, op)
 
 """CurrencyExchange - Обмен Валюты"""
@@ -156,9 +142,8 @@ class AddCurrencyExchangeOperation(Resource):
     def post(self, userId: int):
         '''Добавление Обмена Валюты'''
         print('api.payload', self.api.payload)
-        setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        op: SetOperation = setop_schema().load(self.api.payload)
-        op.id = None
+        setop_schema = marshmallow_dataclass.class_schema(OperationDetail)
+        op: OperationDetail = setop_schema().load(self.api.payload)
         op.type = 'CurrencyExchange'
         op.financeType = 'custom'
         return app.taxerApi.add_operation(userId, op)
@@ -183,9 +168,8 @@ class AddAutoExchangeOperation(Resource):
     def post(self, userId: int):
         '''Добавление Валютномго дохода'''
         print('api.payload', self.api.payload)
-        setop_schema = marshmallow_dataclass.class_schema(SetOperation)
-        op: SetOperation = setop_schema().load(self.api.payload)
-        op.id = None
+        setop_schema = marshmallow_dataclass.class_schema(OperationDetail)
+        op: OperationDetail = setop_schema().load(self.api.payload)
         op.type = 'AutoExchange'
         op.financeType = 'custom'
         return app.taxerApi.add_operation(userId, op)

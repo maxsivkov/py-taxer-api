@@ -96,7 +96,7 @@ class TaxerApi:
 
         return result
 
-    def add_operation(self, userId:int, op:SetOperation) -> AddEntityResponse:
+    def add_operation(self, userId:int, op:OperationDetail) -> AddEntityResponse:
         exclude = ['operation.date', 'operation.uahDate']
         self.logger.debug('add_operation @ {} ->'.format(userId))
         payload_schema = marshmallow_dataclass.class_schema(AddOperation, base_schema=IgnoreNoneSchema)
