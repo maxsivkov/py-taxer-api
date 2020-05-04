@@ -41,9 +41,9 @@
   ```sql
     filterDate:[2020-04-01 TO 2020-04-30] AND filterTotal:[* TO 200] AND filterCurrency:USD
   ```
-   filterDate:[2020-04-01 TO 2020-04-30] - выбрать записи с *2020-04-01* по *2020-04-30*   
-   filterTotal:[* TO 200] - сумма до 200
-   filterCurrency:USD - Валюта USD  
+   `filterDate:[2020-04-01 TO 2020-04-30]` - выбрать записи с *2020-04-01* по *2020-04-30*   
+   `filterTotal:[* TO 200]` - сумма до 200  
+   `filterCurrency:USD` - Валюта USD  
    
    **Важно**  
    В фильтре поддерживается только операция **AND**
@@ -94,13 +94,11 @@ http://127.0.0.1:7080/user/200664/accounts
 [
   {
     "id": 3,
-    "balance": 1048.24,
+    "balance": 1346.28,
     "title": "Счет USD",
     "currency": "USD",
     "num": "ES7921000813610123456789",
     "bank": "Spain bank",
-    "mfo": null,
-    "comment": null,
     "tfBankPlace": "Spain",
     "tfBankSwift": "SPA34",
     "tfBankCorr": "Bank Corr",
@@ -110,35 +108,17 @@ http://127.0.0.1:7080/user/200664/accounts
   },
   {
     "id": 2,
-    "balance": 14976.88,
+    "balance": 18188.64,
     "title": "Счет UAH",
     "currency": "UAH",
     "num": "GR9608100010000001234567890",
-    "bank": "УкрПостБудПромИнвТранс Банк",
-    "mfo": null,
-    "comment": null,
-    "tfBankPlace": null,
-    "tfBankSwift": null,
-    "tfBankCorr": null,
-    "tfBankCorrPlace": null,
-    "tfBankCorrSwift": null,
-    "tfBankCorrAccount": null
+    "bank": "УкрПостБудПромИнвТранс Банк"
   },
   {
     "id": 1,
-    "balance": 51,
+    "balance": 301,
     "title": "Готівковий",
-    "currency": "UAH",
-    "num": null,
-    "bank": null,
-    "mfo": null,
-    "comment": null,
-    "tfBankPlace": null,
-    "tfBankSwift": null,
-    "tfBankCorr": null,
-    "tfBankCorrPlace": null,
-    "tfBankCorrSwift": null,
-    "tfBankCorrAccount": null
+    "currency": "UAH"
   }
 ]
 ```
@@ -168,13 +148,11 @@ http://127.0.0.1:7080/user/200664/accounts/page/1
   "accounts": [
     {
       "id": 3,
-      "balance": 1048.24,
+      "balance": 1346.28,
       "title": "Счет USD",
       "currency": "USD",
       "num": "ES7921000813610123456789",
       "bank": "Spain bank",
-      "mfo": null,
-      "comment": null,
       "tfBankPlace": "Spain",
       "tfBankSwift": "SPA34",
       "tfBankCorr": "Bank Corr",
@@ -184,35 +162,17 @@ http://127.0.0.1:7080/user/200664/accounts/page/1
     },
     {
       "id": 2,
-      "balance": 14976.88,
+      "balance": 18188.64,
       "title": "Счет UAH",
       "currency": "UAH",
       "num": "GR9608100010000001234567890",
-      "bank": "УкрПостБудПромИнвТранс Банк",
-      "mfo": null,
-      "comment": null,
-      "tfBankPlace": null,
-      "tfBankSwift": null,
-      "tfBankCorr": null,
-      "tfBankCorrPlace": null,
-      "tfBankCorrSwift": null,
-      "tfBankCorrAccount": null
+      "bank": "УкрПостБудПромИнвТранс Банк"
     },
     {
       "id": 1,
-      "balance": 51,
+      "balance": 301,
       "title": "Готівковий",
-      "currency": "UAH",
-      "num": null,
-      "bank": null,
-      "mfo": null,
-      "comment": null,
-      "tfBankPlace": null,
-      "tfBankSwift": null,
-      "tfBankCorr": null,
-      "tfBankCorrPlace": null,
-      "tfBankCorrSwift": null,
-      "tfBankCorrAccount": null
+      "currency": "UAH"
     }
   ]
 }

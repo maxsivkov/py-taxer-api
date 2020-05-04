@@ -74,7 +74,6 @@ class TaxerApi:
             'filters': filter
         })
         schema = marshmallow_dataclass.class_schema(OperationsBrief)
-        #result:Operations = schema(exclude=['operations.contents.date']).load(json, partial=True, unknown=EXCLUDE)
         result: OperationsBrief = schema().load(json, partial=True, unknown=EXCLUDE)
         self.logger.debug('operations @ {} [pg {} of {}] <-'.format(userId, pageNumber, result.paginator.totalPages))
 

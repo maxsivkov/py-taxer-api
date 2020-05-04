@@ -30,7 +30,7 @@ def account_filter(q): return Lucene2AccountFilter(q).filter() if q is not None 
 @ns.param('pageNumber', 'Номер страницы')
 @ns.param('q', 'строка поиска в Lucene нотации')
 class UserAccounts(Resource):
-    @ns.marshal_with(user_accounts_model)
+    @ns.marshal_with(user_accounts_model, skip_none=True)
     def get(self, userId:int, pageNumber:int):
         '''Возвращает зарегистрированные счета для профиля постранично'''
         return app.taxerApi.user_accounts(userId, account_filter(request.args.get('q', None, str)), pageNumber)
@@ -40,7 +40,7 @@ class UserAccounts(Resource):
 @ns.param('q', 'строка поиска в Lucene нотации')
 @ns.response(500, 'Shit happens')
 class UserAccountsAll(Resource):
-    @ns.marshal_list_with(user_account_model)
+    @ns.marshal_list_with(user_account_model, skip_none=True)
     def get(self, userId:int):
         '''Возвращает _все_ зарегистрированные счета для профиля'''
         return app.taxerApi.user_accounts_all(userId, account_filter(request.args.get('q', None, str)))

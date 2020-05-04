@@ -67,7 +67,7 @@ user_account_short_model = Model('UserAccountShort', {
 user_accounts_model = Model('UserAccounts', {
     'paginator': fields.Nested(paginator_model, description='Страницы'),
     'accountsCurrencies': fields.List(fields.String, description='Валюты счетов'),
-    'accounts': fields.List(fields.Nested(user_account_model), description='Счета'),
+    'accounts': fields.List(fields.Nested(user_account_model, skip_none=True), description='Счета'),
 })
 
 operation_brief_content_model = Model('OperationBriefContent', {
