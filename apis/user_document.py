@@ -4,7 +4,7 @@ from flask_restx import Namespace, Resource, Model, fields
 import app
 from .model import *
 from taxer_model import UserDocuments, Document
-ns = Namespace('document', description='Банковские счета и документы', path="/user/<int:userId>")
+ns = Namespace('document', description='Документы', path="/user/<int:userId>")
 
 """Documents - документы/контракты"""
 def doc2resource(op:str):
@@ -51,12 +51,12 @@ class UserDocumentContract(Resource):
         return app.taxerApi.document(userId, docId, 'contract')
 @ns.route('/document/contract')
 @ns.param('userId', 'Идентификатор профиля')
-class AddUserDocumentContract(Resource):
+class UserDocumentContractList(Resource):
     @ns.expect(add_document_contract_model, validate=True)
     @ns.marshal_with(add_document_response_model)
     def post(self, userId:int):
         '''Добавление документа типа Договор'''
-        print('api.payload', self.api.payload)
+        #print('api.payload', self.api.payload)
         schema = marshmallow_dataclass.class_schema(Document)
         doc:Document = schema().load(self.api.payload)
         doc.type = 'contract'
@@ -73,6 +73,22 @@ class UserDocumentAct(Resource):
     def get(self, userId:int, docId:int):
         '''Возвращает расширенные свойства акта для профиля'''
         return app.taxerApi.document(userId, docId, 'act')
+@ns.route('/document/act')
+@ns.param('userId', 'Идентификатор профиля')
+class UserDocumentActList(Resource):
+    @ns.expect(add_document_act_model, validate=True)
+    @ns.marshal_with(add_document_response_model)
+    def post(self, userId:int):
+        '''Добавление документа типа Акт'''
+        #print('api.payload', self.api.payload)
+        schema = marshmallow_dataclass.class_schema(Document)
+        doc:Document = schema().load(self.api.payload)
+        doc.type = 'act'
+        doc.file = {}
+        if doc.contents is None:
+            doc.contents = []
+        return app.taxerApi.add_document(userId, doc)
+
 
 """TODO: Implement other document types: 'act'... """
 

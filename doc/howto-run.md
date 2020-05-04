@@ -123,3 +123,5 @@ TAXER_PWD=mypassword
     ```bash
     flask run --port 7080 --host=0.0.0.0 --no-reload
     ```
+
+<a href="#top">Наверх</a>

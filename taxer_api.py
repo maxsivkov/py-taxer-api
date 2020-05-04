@@ -66,12 +66,12 @@ class TaxerApi:
         schema = marshmallow_dataclass.class_schema(Account)
         return schema().load(json['content']['account'])
 
-    def operations(self, userId:int, pageNumber:int = 1) -> OperationsBrief:
+    def operations(self, userId:int, pageNumber:int = 1, filter:dict = {}) -> OperationsBrief:
         self.logger.debug('operations @ {} [pg {}] ->'.format(userId, pageNumber))
         json = self.execute('POST', 'api/finances/operation/load?lang={}'.format(self.lang), json={
             'userId': userId,
             'pageNumber': pageNumber,
-            'filters': {}
+            'filters': filter
         })
         schema = marshmallow_dataclass.class_schema(OperationsBrief)
         #result:Operations = schema(exclude=['operations.contents.date']).load(json, partial=True, unknown=EXCLUDE)
@@ -80,8 +80,8 @@ class TaxerApi:
 
         return result
 
-    def operations_all(self, userId: int) -> List[OperationBrief]:
-        return self.all_pages(userId, lambda uid, pageno : self.operations(uid, pageno), lambda content : content.operations)
+    def operations_all(self, userId: int, filter:dict) -> List[OperationBrief]:
+        return self.all_pages(userId, lambda uid, pageno : self.operations(uid, pageno, filter), lambda content : content.operations)
 
     def operation_detail(self, userId:int, operationId:int, operationType:str) -> OperationDetail:
         self.logger.debug('operations_detail @ {} [op {} {}] ->'.format(userId, operationId, operationType))
@@ -108,20 +108,20 @@ class TaxerApi:
         schema = marshmallow_dataclass.class_schema(AddEntityResponse)
         return schema().load(json, partial=True, unknown=EXCLUDE)
 
-    def user_accounts(self, userId: int, pageNumber: int = 1) -> UserAccounts:
+    def user_accounts(self, userId: int, filter:dict, pageNumber: int = 1) -> UserAccounts:
         self.logger.debug('user_accounts @ {} [pg {}] ->'.format(userId, pageNumber))
         json = self.execute('POST', 'api/finances/account/load?lang={}'.format(self.lang), json={
             'userId': userId,
             'pageNumber': pageNumber,
-            'filters': {}
+            'filters': filter
         })
         schema = marshmallow_dataclass.class_schema(UserAccounts)
         result: UserAccounts = schema().load(json, partial=True, unknown=EXCLUDE)
         self.logger.debug('user_accounts @ {} [pg {} of {}] <-'.format(userId, pageNumber, result.paginator.totalPages))
         return result
 
-    def user_accounts_all(self, userId: int) -> List[UserAccount]:
-        return self.all_pages(userId, lambda uid, pageno: self.user_accounts(uid, pageno),
+    def user_accounts_all(self, userId: int, filter:dict) -> List[UserAccount]:
+        return self.all_pages(userId, lambda uid, pageno: self.user_accounts(uid, filter, pageno ),
                               lambda content: content.accounts)
 
     def documents(self, userId:int, pageNumber:int = 1) -> UserDocuments:

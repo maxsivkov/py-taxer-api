@@ -164,6 +164,16 @@ class Parent(TimestampContent):
         render_module = ujson
 
 @dataclass
+class DocumentContent():
+    id: int = field(default=None)
+    title: str = field(default=None)
+    titleTf: str = field(default=None)
+    measure: str = field(default=None)
+    measureTf: str = field(default=None)
+    quantity: int = field(default=None)
+    price: Decimal = field(default=None)
+
+@dataclass
 class Document(TimestampContent, ExpireTimestamp):
     id: int= field(default=None)
     type: str= field(default=None) #"contract"
@@ -185,6 +195,8 @@ class Document(TimestampContent, ExpireTimestamp):
     actPrintType: str = field(default=None)
     isForeign: int = field(default=None)
     file:Dict[str,str] = field(default=None)
+
+    contents:List[DocumentContent] = field(default=None)
     """Resolve multiple inheritance"""
     def __post_init__(self):
         TimestampContent.__post_init__(self)

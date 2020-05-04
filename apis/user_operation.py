@@ -1,8 +1,10 @@
 from typing import List
 import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
+from flask import request
 import app
 from .model import *
+from .lucene_filter import Lucene2Filter
 from taxer_model import OperationBrief, OperationsBrief, OperationDetail
 
 ns = Namespace('operation', description='Операции', path="/user/<int:userId>")
@@ -21,15 +23,34 @@ def oper2resource(op:str):
         return AutoExchangeOperation
     raise Exception("Operation {} not known".format(op))
 
+class Lucene2OperationFilter(Lucene2Filter):
+    def special(self, tree, name:str, low_value:str, high_value:str) -> Dict[str, object]:
+        result = {}
+        if name == 'filterDate':
+            result = {name: {'dateFrom': self.dt2timestamp_low(low_value),
+                             'dateTo': self.dt2timestamp_high(high_value)}}
+        if name == 'filterTotal':
+            expr = None
+            if tree.expr.include_low and tree.expr.include_high and low_value == high_value:
+                expr = f'equal-{low_value}'
+            elif low_value != '*':
+                expr = f'more-{low_value}'
+            elif high_value != '*':
+                expr = f'less-{high_value}'
+            result = {name: expr}
+        return result
+def operation_filter(q): return Lucene2OperationFilter(q).filter() if q is not None and len(q) > 0 else {}
+
 """Operations brief"""
 
 @ns.route('/operation')
 @ns.param('userId', 'Идентификатор профиля')
+@ns.param('q', 'строка поиска в Lucene нотации')
 class OperationsAll(Resource):
     @ns.marshal_list_with(operation_brief_model)
     def get(self, userId: int):
         '''Возвращает краткое описание _всех_ операций. Может занять определенное время'''
-        ops:List[OperationBrief] = app.taxerApi.operations_all(userId)
+        ops:List[OperationBrief] = app.taxerApi.operations_all(userId, operation_filter(request.args.get('q', None, str)))
         for op in ops:
             op.path = self.api.url_for(oper2resource(op.type), userId=userId, operationId=op.id) #_external=True,
         return ops
@@ -37,11 +58,12 @@ class OperationsAll(Resource):
 @ns.route('/operation/page/<int:pageNumber>')
 @ns.param('userId', 'Идентификатор профиля')
 @ns.param('pageNumber', 'Номер страницы')
+@ns.param('q', 'строка поиска в Lucene нотации')
 class OperationsBrief(Resource):
     @ns.marshal_with(operations_brief_model)
     def get(self, userId:int, pageNumber:int):
         '''Возвращает краткое описание операций постранично'''
-        ops:OperationsBrief = app.taxerApi.operations(userId)
+        ops:OperationsBrief = app.taxerApi.operations(userId, pageNumber, operation_filter(request.args.get('q', None, str)))
         for op in ops.operations:
             op.path = self.api.url_for(oper2resource(op.type), userId=userId, operationId=op.id) #_external=True,
         return ops

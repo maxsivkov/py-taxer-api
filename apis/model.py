@@ -140,6 +140,12 @@ operation_base_model = Model('OperationBase', {
 
 add_operation_base_model = Model('AddOperation', {**operation_base_common_params})
 
+operation_filter_model = Model('OperationFilter', {
+    'filterType': fields.String(description='Тип операции (Withdrawal - перевод между счетами; FlowIncome - доход; FlowOutgo - расход; CurrencyExchange - обмен валюты; )'),
+})
+
+
+
 """Withdrawal - перевод между счетами"""
 
 operation_withdrawal_common_params:Dict = {
@@ -236,36 +242,34 @@ add_auto_exchange_model = add_operation_base_model.clone('AddAutoExchange', {**a
 })
 
 """********************************   Documents ******************************"""
-document_brief_params:Dict = {
-    'id': fields.Integer(description='Идентификатор документа'),
+
+document_common_params:Dict = {
     'date': fields.DateTime(description='Дата создания/подписания документа'),
-    'type': fields.String(description='Тип документа'),
     'direction': fields.Integer(description='0 - продажа, 1 покупка??'),
     'number': fields.String(description='Номер документа'),
-    'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
+#    'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
     'currency': fields.String(description='Валюта документа'),
-    'paid': NumberFixed(description='Оплачено по документу', decimals=2, allow_null=True, skip_none=True),
     'total': NumberFixed(description='Сумма документа', decimals=2, allow_null=True, skip_none=True),
     'title': fields.String(description='Название документа'),
     'comment': fields.String(description='Коментарий'),
 }
 
-new_document_params:Dict = {
-    'date': fields.DateTime(description='Дата создания/подписания документа'),
-    'direction': fields.Integer(description='0 - продажа, 1 покупка??'),
-    'number': fields.String(description='Номер документа'),
+
+document_brief_params:Dict = {**document_common_params,
+    'id': fields.Integer(description='Идентификатор документа'),
+    'type': fields.String(description='Тип документа'),
     'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
-    'currency': fields.String(description='Валюта документа'),
-    'total': NumberFixed(description='Сумма документа', decimals=2, allow_null=True, skip_none=True),
-    'title': fields.String(description='Название документа'),
-    'comment': fields.String(description='Коментарий'),
+    'paid': NumberFixed(description='Оплачено по документу', decimals=2, allow_null=True, skip_none=True),
+}
+
+new_document_params:Dict = {**document_common_params,
+    'contractor': fields.Nested(contractor_short_model, description='Контрагент', allow_null=True, skip_none=True),
 }
 
 
 document_brief_model = Model('DocumentBrief', {**document_brief_params,
     'path': fields.String(description='URL для получения полной информации по операции'),
                                                })
-
 #new_document_params = document_brief_params.copy()
 #del new_document_params['id']
 #del new_document_params['type']
@@ -281,17 +285,35 @@ document_contract_params = {
 
 document_contract_model = Model('DocumentContract', {**document_brief_params, **document_contract_params})
 add_document_contract_model = Model('AddDocumentContract', {**new_document_params, **document_contract_params})
-document_act_params = {
-    'account': fields.Nested(user_account_brief_model, description='Счет', allow_null=True, skip_none=True),
-    'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
-    'nds': fields.Integer(description='НДС'),
+
+
+"""act - Акт"""
+act_content_model = Model("ActContent", {
+    'id': fields.Integer(description='Идентификатор записи'),
+    'title': fields.String(description='Название'),
+    'titleTf': fields.String(description='Название2'),
+    'measure': fields.String(description='Еденица измерения'),
+    'measureTf': fields.String(description='Еденица измерения2'),
+    'quantity': fields.Integer(description='Количество'),
+    'price': NumberFixed(description='Цена', decimals=2, allow_null=True, skip_none=True),
+})
+
+document_act_common_params:Dict = {
+    'nds': fields.Integer(description='НДС (-1 - Без НДС)'),
     'actPlace': fields.String(description='Место'),
     'actType': fields.String(description='actType'),
     'actPrintType': fields.String(description='actPrintType'),
     'isForeign': fields.Integer(description='isForeign'),
+    'contents' : fields.List(fields.Nested(act_content_model, allow_null=False), description='Содержание', allow_null=False, required=True, min_items=1),
 }
-document_act_model = Model('DocumentAct', {**document_brief_params, **document_act_params})
-add_document_act_model = Model('AddDocumentAct', {**new_document_params, **document_act_params})
+document_act_model = Model('DocumentAct', {**document_brief_params, **document_act_common_params,
+    'account': fields.Nested(user_account_brief_model, description='Счет', allow_null=True, skip_none=True),
+    'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
+})
+add_document_act_model = Model('AddDocumentAct', {**new_document_params, **document_act_common_params,
+    'account': fields.Nested(user_account_short_model, description='Счет', allow_null=True, skip_none=True),
+    'parent': fields.Nested(parent_short_type_model, description='Договор', allow_null=True, skip_none=True),
+})
 
 documents_model = Model('Documents', {
     'paginator': fields.Nested(paginator_model, description='Страницы'),
@@ -307,11 +329,11 @@ models:List[Model] = [paginator_model, user_model, profile_model, user_account_m
                       , operations_brief_model, contractor_model, contractor_short_model, document_brief_model, document_contract_model, document_act_model, documents_model, add_operation_response_model
                       , add_operation_base_model
 
-                      , operation_base_model, parent_model, parent_short_model, parent_short_type_model
+                      , operation_base_model, operation_filter_model, parent_model, parent_short_model, parent_short_type_model
                       , operation_withdrawal_model, add_operation_withdrawal_model
                       , operation_flowincome_model, add_operation_flowincome_model
                       , operation_flowoutgo_model, add_operation_flowoutgo_model
                       , currency_exchange_model, add_currency_exchange_model
                       , auto_exchange_model, add_auto_exchange_model
-                      , add_document_contract_model, add_document_act_model, add_document_response_model
+                      , add_document_contract_model, act_content_model, add_document_act_model, add_document_response_model
                       ]
