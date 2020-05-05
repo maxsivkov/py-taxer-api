@@ -37,9 +37,7 @@ profile_model = Model('Profile', {
     'users': fields.List(fields.Nested(user_model), description='Зарегистрированные профили')
 })
 
-user_account_model = Model('UserAccount', {
-    'id': fields.Integer(description='Идентификатор счета профиля'),
-    'balance': NumberFixed(description='Баланс счета', decimals=2),
+user_bank_account_common_params:dict = {
     'title': fields.String(description='Название счета'),
     'currency': fields.String(description='Валюта'),
     'num': fields.String(description='Номер счета в банке'),
@@ -52,22 +50,33 @@ user_account_model = Model('UserAccount', {
     'tfBankCorrPlace': fields.String(description='Адрес банка-корреспондента'),
     'tfBankCorrSwift': fields.String(description='SWIFT банка-корреспондента'),
     'tfBankCorrAccount': fields.String(description='Счет в банке-корреспонденте'),
+}
+
+user_bank_account_model = Model('UserBankAccount', {
+    'id': fields.Integer(description='Идентификатор счета профиля'),
+    'balance': NumberFixed(description='Баланс счета', decimals=2),
+    **user_bank_account_common_params
 })
 
-user_account_brief_model = Model('UserAccountBrief', {
+add_user_bank_account_model = Model('AddUserBankAccount', {**user_bank_account_common_params})
+add_user_bank_account_response_model = Model('AddUserBankAccountResponse', {
+    'id': fields.Integer(description='Идентификатор счета'),
+})
+
+user_bank_account_brief_model = Model('UserBankAccountBrief', {
     'id': fields.Integer(description='Идентификатор счета'),
     'title': fields.String(description='Название счета', allow_null=True, skip_none=True),
     'currency': fields.String(description='Валоюта счета', allow_null=True, skip_none=True),
 })
 
-user_account_short_model = Model('UserAccountShort', {
+user_bank_account_short_model = Model('UserBankAccountShort', {
     'id': fields.Integer(description='Идентификатор счета'),
 })
 
 user_accounts_model = Model('UserAccounts', {
     'paginator': fields.Nested(paginator_model, description='Страницы'),
     'accountsCurrencies': fields.List(fields.String, description='Валюты счетов'),
-    'accounts': fields.List(fields.Nested(user_account_model, skip_none=True), description='Счета'),
+    'accounts': fields.List(fields.Nested(user_bank_account_model, skip_none=True), description='Счета'),
 })
 
 operation_brief_content_model = Model('OperationBriefContent', {
@@ -152,15 +161,15 @@ operation_withdrawal_common_params:Dict = {
     'outgoTotal': NumberFixed(description='Сумма перевода', decimals=2, allow_null=True, skip_none=True),
 }
 operation_withdrawal_model = operation_base_model.clone('OperationWithdrawal', {**operation_withdrawal_common_params,
-    'outgoAccount': fields.Nested(user_account_brief_model, description='Счет списания', allow_null=True,
+    'outgoAccount': fields.Nested(user_bank_account_brief_model, description='Счет списания', allow_null=True,
                                   skip_none=True),
-    'incomeAccount': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+    'incomeAccount': fields.Nested(user_bank_account_brief_model, description='Счет зачисления', allow_null=True,
                                    skip_none=True),
 })
 add_operation_withdrawal_model = add_operation_base_model.clone('AddOperationWithdrawal', {**operation_withdrawal_common_params,
-    'outgoAccount': fields.Nested(user_account_short_model, description='Счет списания', allow_null=True,
+    'outgoAccount': fields.Nested(user_bank_account_short_model, description='Счет списания', allow_null=True,
                                   skip_none=True),
-    'incomeAccount': fields.Nested(user_account_short_model, description='Счет зачисления', allow_null=True,
+    'incomeAccount': fields.Nested(user_bank_account_short_model, description='Счет зачисления', allow_null=True,
                                    skip_none=True),
 })
 
@@ -175,7 +184,7 @@ operation_flowincome_common_params:Dict = {
     'payedSum': NumberFixed(description='Сумма по документу', decimals=2, allow_null=True, skip_none=True),
 }
 flowincome_params:Dict = {
-    'account': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+    'account': fields.Nested(user_bank_account_brief_model, description='Счет зачисления', allow_null=True,
                              skip_none=True),
     'contractor':fields.Nested(contractor_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
@@ -184,7 +193,7 @@ flowincome_params:Dict = {
 
 }
 operation_flowincome_model = operation_base_model.clone('OperationFlowIncome', {**operation_flowincome_common_params,
-    'account': fields.Nested(user_account_brief_model, description='Счет зачисления', allow_null=True,
+    'account': fields.Nested(user_bank_account_brief_model, description='Счет зачисления', allow_null=True,
                              skip_none=True),
     'contractor':fields.Nested(contractor_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
@@ -192,7 +201,7 @@ operation_flowincome_model = operation_base_model.clone('OperationFlowIncome', {
                                 skip_none=True),
 })
 add_operation_flowincome_model = add_operation_base_model.clone('AddOperationFlowIncome', {**operation_flowincome_common_params,
-    'account': fields.Nested(user_account_short_model, description='Счет зачисления', allow_null=True,
+    'account': fields.Nested(user_bank_account_short_model, description='Счет зачисления', allow_null=True,
                              skip_none=True),
     'contractor':fields.Nested(contractor_short_model, description='Контрагент', allow_null=True,
                                   skip_none=True),
@@ -227,17 +236,17 @@ auto_exchange_common_params:Dict = {
 auto_exchange_model = operation_base_model.clone('AutoExchange', {**auto_exchange_common_params,
  'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
  'contractor': fields.Nested(contractor_model, description='Контрагент', allow_null=True, skip_none=True),
- 'uahAccount': fields.Nested(user_account_brief_model, description='Счет зачисления при обязательной продаже',
+ 'uahAccount': fields.Nested(user_bank_account_brief_model, description='Счет зачисления при обязательной продаже',
                              allow_null=True, skip_none=True),
- 'currencyAccount': fields.Nested(user_account_brief_model, description='Валютный счет', allow_null=True,
+ 'currencyAccount': fields.Nested(user_bank_account_brief_model, description='Валютный счет', allow_null=True,
                                   skip_none=True),
 })
 add_auto_exchange_model = add_operation_base_model.clone('AddAutoExchange', {**auto_exchange_common_params,
  'parent': fields.Nested(parent_short_type_model, description='Договор', allow_null=True, skip_none=True),
  'contractor': fields.Nested(contractor_short_model, description='Контрагент', allow_null=True, skip_none=True),
- 'uahAccount': fields.Nested(user_account_short_model, description='Счет зачисления при обязательной продаже',
+ 'uahAccount': fields.Nested(user_bank_account_short_model, description='Счет зачисления при обязательной продаже',
                              allow_null=True, skip_none=True),
- 'currencyAccount': fields.Nested(user_account_short_model, description='Валютный счет', allow_null=True,
+ 'currencyAccount': fields.Nested(user_bank_account_short_model, description='Валютный счет', allow_null=True,
                                   skip_none=True),
 })
 
@@ -307,11 +316,11 @@ document_act_common_params:Dict = {
     'contents' : fields.List(fields.Nested(act_content_model, allow_null=False), description='Содержание', allow_null=False, required=True, min_items=1),
 }
 document_act_model = Model('DocumentAct', {**document_brief_params, **document_act_common_params,
-    'account': fields.Nested(user_account_brief_model, description='Счет', allow_null=True, skip_none=True),
+    'account': fields.Nested(user_bank_account_brief_model, description='Счет', allow_null=True, skip_none=True),
     'parent': fields.Nested(parent_model, description='Договор', allow_null=True, skip_none=True),
 })
 add_document_act_model = Model('AddDocumentAct', {**new_document_params, **document_act_common_params,
-    'account': fields.Nested(user_account_short_model, description='Счет', allow_null=True, skip_none=True),
+    'account': fields.Nested(user_bank_account_short_model, description='Счет', allow_null=True, skip_none=True),
     'parent': fields.Nested(parent_short_type_model, description='Договор', allow_null=True, skip_none=True),
 })
 
@@ -325,15 +334,18 @@ add_document_response_model = Model('AddDocumentResponse', {
 })
 
 
-models:List[Model] = [paginator_model, user_model, profile_model, user_account_model, user_accounts_model, user_account_brief_model, user_account_short_model, operation_brief_content_model, operation_brief_model
-                      , operations_brief_model, contractor_model, contractor_short_model, document_brief_model, document_contract_model, document_act_model, documents_model, add_operation_response_model
-                      , add_operation_base_model
+models:List[Model] = [
+    paginator_model, user_model, profile_model, user_bank_account_model, user_accounts_model, user_bank_account_brief_model, user_bank_account_short_model, add_user_bank_account_model
+    , add_user_bank_account_response_model
+    , operation_brief_content_model, operation_brief_model
+    , operations_brief_model, contractor_model, contractor_short_model, document_brief_model, document_contract_model, document_act_model, documents_model, add_operation_response_model
+    , add_operation_base_model
 
-                      , operation_base_model, operation_filter_model, parent_model, parent_short_model, parent_short_type_model
-                      , operation_withdrawal_model, add_operation_withdrawal_model
-                      , operation_flowincome_model, add_operation_flowincome_model
-                      , operation_flowoutgo_model, add_operation_flowoutgo_model
-                      , currency_exchange_model, add_currency_exchange_model
-                      , auto_exchange_model, add_auto_exchange_model
-                      , add_document_contract_model, act_content_model, add_document_act_model, add_document_response_model
-                      ]
+    , operation_base_model, operation_filter_model, parent_model, parent_short_model, parent_short_type_model
+    , operation_withdrawal_model, add_operation_withdrawal_model
+    , operation_flowincome_model, add_operation_flowincome_model
+    , operation_flowoutgo_model, add_operation_flowoutgo_model
+    , currency_exchange_model, add_currency_exchange_model
+    , auto_exchange_model, add_auto_exchange_model
+    , add_document_contract_model, act_content_model, add_document_act_model, add_document_response_model
+]

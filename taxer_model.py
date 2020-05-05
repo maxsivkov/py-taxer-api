@@ -247,23 +247,24 @@ class OperationDetail(OperationBrief, TimestampContent, UahTimestampContent):
 
 @dataclass
 class UserAccount:
-    id: int
-    balance: Decimal
-    title: str = None
-    currency: str = None
-    num: str = None
-    bank: str = None
-    mfo: str = None
-    comment: str = None
-    tfBankPlace: str = None
-    tfBankSwift: str = None
-    tfBankCorr: str = None
-    tfBankCorrPlace: str = None
-    tfBankCorrSwift: str = None
-    tfBankCorrAccount: str = None
+    id:int = field(default=None)
+    balance: Decimal = field(default=None)
+    title: str = field(default=None)
+    currency: str = field(default=None)
+    num: str = field(default=None)
+    bank: str = field(default=None)
+    mfo: str = field(default=None)
+    comment: str = field(default=None)
+    tfBankPlace: str = field(default=None)
+    tfBankSwift: str = field(default=None)
+    tfBankCorr: str = field(default=None)
+    tfBankCorrPlace: str = field(default=None)
+    tfBankCorrSwift: str = field(default=None)
+    tfBankCorrAccount: str = field(default=None)
 
     class Meta:
         unknown=EXCLUDE
+        render_module = ujson
 
 class UserAccounts:
     paginator: Paginator
@@ -286,6 +287,15 @@ class AddOperation:
     class Meta:
         unknown = EXCLUDE
         render_module = ujson
+
+@dataclass
+class AddUserAccount:
+    userId:int = field(default=None)
+    account: UserAccount = field(default=None)
+    class Meta:
+        unknown = EXCLUDE
+        render_module = ujson
+
 
 @dataclass
 class AddDocument:

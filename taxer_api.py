@@ -107,6 +107,8 @@ class TaxerApi:
         schema = marshmallow_dataclass.class_schema(AddEntityResponse)
         return schema().load(json, partial=True, unknown=EXCLUDE)
 
+
+
     def user_accounts(self, userId: int, filter:dict, pageNumber: int = 1) -> UserAccounts:
         self.logger.debug('user_accounts @ {} [pg {}] ->'.format(userId, pageNumber))
         json = self.execute('POST', 'api/finances/account/load?lang={}'.format(self.lang), json={
@@ -122,6 +124,19 @@ class TaxerApi:
     def user_accounts_all(self, userId: int, filter:dict) -> List[UserAccount]:
         return self.all_pages(userId, lambda uid, pageno: self.user_accounts(uid, filter, pageno ),
                               lambda content: content.accounts)
+    def add_user_account(self, userId:int, acc:UserAccount) -> AddEntityResponse:
+        exclude = []
+        self.logger.debug('add_user_account @ {} ->'.format(userId))
+        payload_schema = marshmallow_dataclass.class_schema(AddUserAccount, base_schema=IgnoreNoneSchema)
+        payload:AddUserAccount = AddUserAccount(userId, acc)
+        #print('payload raw ', payload)
+        #print('payload json ', payload_schema(exclude=exclude).dumps(payload, ensure_ascii=False))
+        json = self.execute('POST', 'api/finances/account/create?lang={}'.format(self.lang), json=payload_schema(exclude=exclude).dump(payload))
+        self.logger.debug('add_user_account @ {} <-'.format(userId))
+        schema = marshmallow_dataclass.class_schema(AddEntityResponse)
+        return schema().load(json, partial=True, unknown=EXCLUDE)
+
+
 
     def documents(self, userId:int, pageNumber:int = 1) -> UserDocuments:
         json = self.execute('POST', 'api/finances/document/load?lang={}'.format(self.lang), json={

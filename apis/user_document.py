@@ -1,4 +1,3 @@
-from typing import List, Dict
 import marshmallow_dataclass
 from flask_restx import Namespace, Resource, Model, fields
 import app

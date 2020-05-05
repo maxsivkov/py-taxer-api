@@ -1,7 +1,9 @@
 from typing import Dict
+import marshmallow_dataclass
 from flask_restx import Namespace, Resource
 from flask import request
-from .model import profile_model, user_accounts_model, user_account_model
+from .model import user_accounts_model, user_bank_account_model, add_user_bank_account_model, add_user_bank_account_response_model
+from taxer_model import UserAccount
 from .lucene_filter import Lucene2Filter
 import app
 
@@ -37,11 +39,17 @@ class UserAccounts(Resource):
 
 @ns.route('/accounts')
 @ns.param('userId', 'Идентификатор профиля')
-@ns.param('q', 'строка поиска в Lucene нотации')
 @ns.response(500, 'Shit happens')
 class UserAccountsAll(Resource):
-    @ns.marshal_list_with(user_account_model, skip_none=True)
+    @ns.marshal_list_with(user_bank_account_model, skip_none=True)
     def get(self, userId:int):
         '''Возвращает _все_ зарегистрированные счета для профиля'''
         return app.taxerApi.user_accounts_all(userId, account_filter(request.args.get('q', None, str)))
 
+    @ns.expect(add_user_bank_account_model, validate=True)
+    @ns.marshal_with(add_user_bank_account_response_model)
+    def post(self, userId: int):
+        '''Добавление нового счета'''
+        schema = marshmallow_dataclass.class_schema(UserAccount)
+        acc:UserAccount = schema().load(self.api.payload)
+        return app.taxerApi.add_user_account(userId, acc)
