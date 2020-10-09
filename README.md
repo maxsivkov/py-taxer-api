@@ -23,7 +23,7 @@ Implement RestAPI for taxer.ua accounting system. Because taxer.ua is mostly use
   * Внесение данных по операциям
 
 ## [Как запустить](doc/howto-run.md)  
-  
+
 ## Как работает  
 - Внутри у taxer.ua есть внутреннее API, однако чтобы им воспользоваться необходимо выполнить вход на сайт (указывае ligin/password). После этого в браузер приходят cookies одна из них это `XSRF-TOKEN`. Далее это значение подставляется в виде `X-XSRF-TOKEN` хидера в каждый вызов их внутреннего АПИ вместе с cookies
 - Исходя из п. 1 наша задача:
@@ -36,7 +36,9 @@ Implement RestAPI for taxer.ua accounting system. Because taxer.ua is mostly use
   * После запуска приложения переходим на http://127.0.0.1:7080/swagger.json, копируем содержимое в clipboard
   * Идем на https://editor.swagger.io/, встакляем содержимое в левое окно (там где редактор)
   * В меню Generate Client выбираем нужную платформу, и через какоето время получаем готовый SDK. Существуют конечно методы генерации SDK с помощью [Swagger Codegen](https://swagger.io/docs/open-source-tools/swagger-codegen/) но это уже out of scope 
-##TODO
+
+## TODO
+
 * Реализовать PUT и DELETE во всех сущностях (Изменение и удаление)
 * Работа с дополнительными документами (накладная, чек, счет)
 
