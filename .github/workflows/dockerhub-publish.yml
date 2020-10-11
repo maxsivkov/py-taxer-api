@@ -14,7 +14,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: maxsivkov/taxerapi
           tags: |
             maxsivkov/taxerapi:latest
             maxsivkov/taxerapi:1.0
