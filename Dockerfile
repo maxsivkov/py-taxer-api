@@ -1,10 +1,5 @@
 FROM python:3.9.0 as build-env
 
-LABEL Author="Max Sivkov"
-LABEL E-mail="maxsivkov@gmail.com"
-LABEL version="0.0.1"
-STOPSIGNAL SIGINT
-
 WORKDIR /app
 
 RUN python3 -m pip install virtualenv
@@ -16,6 +11,13 @@ RUN . venv/bin/activate && pip install --no-cache-dir . &&\
   find /app/venv \( -type d -a -name test -o -name tests \) -o \( -type f -a -name '*.pyc' -o -name '*.pyo' \) -exec rm -rf '{}' \+
 
 FROM python:3.9-alpine
+
+LABEL Author="Max Sivkov"
+LABEL E-mail="maxsivkov@gmail.com"
+LABEL version="0.0.1"
+STOPSIGNAL SIGINT
+
+
 #ENV PYTHONDONTWRITEBYTECODE 1
 ENV FLASK_APP "app:create_app()"
 ENV FLASK_ENV "development"
@@ -24,7 +26,7 @@ ENV HOST=0.0.0.0
 ENV PORT=7080
 
 RUN apk update && \
-    apk --no-cache --update add libstdc++ && \
+    apk --no-cache --update add libstdc++ jq && \
     rm -rf /var/cache/apk/*
 
 WORKDIR /app
