@@ -64,7 +64,7 @@ class TaxerApi:
     def account(self) -> Account:
         json = self.execute('POST', 'api/user/login/load_account?lang={}'.format(self.lang))
         schema = marshmallow_dataclass.class_schema(Account)
-        return schema().load(json['content']['account'])
+        return schema().load(json['account'])
 
     def operations(self, userId:int, pageNumber:int = 1, filter:dict = {}) -> OperationsBrief:
         self.logger.debug('operations @ {} [pg {}] ->'.format(userId, pageNumber))
