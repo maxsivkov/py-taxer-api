@@ -68,7 +68,7 @@ def setup_logger(filename:str):
 def create_app(config_filename:str = None) -> Flask:
     setup_logger('logging.yaml')
     logger = logging.getLogger(__name__)
-
+    logger.debug(f'access app http://localhost:<port>/docs')
     #traverse_q()
 
     HUB = os.environ.get('GRID_HUB', None)

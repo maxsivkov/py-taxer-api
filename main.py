@@ -28,6 +28,6 @@ if __name__ == '__main__':
     TAXER_COOKIES = os.environ.get('TAXER_COOKIES', None)
     #HUB='http://localhost:4444/wd/hub'
 
-    from .app import create_app
+    from app import create_app
     create_app().run(debug=True, host = HOST, port=PORT, use_reloader=TAXER_TOKEN is not None or TAXER_COOKIES is not None)
 # geco driver https://github.com/mozilla/geckodriver/releases
