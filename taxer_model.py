@@ -280,6 +280,7 @@ class UserDocuments:
         unknown=EXCLUDE
 
 # -----------------------------------------------------
+
 @dataclass
 class AddOperation:
     userId:int = field(default=None)
@@ -287,6 +288,15 @@ class AddOperation:
     class Meta:
         unknown = EXCLUDE
         render_module = ujson
+        exclude: ['operation.date', 'operation.uahDate']
+
+@dataclass
+class AddOperations:
+    operations: List[AddOperation] = field(default_factory=list)
+    class Meta:
+        unknown = EXCLUDE
+        render_module = ujson
+
 
 @dataclass
 class AddUserAccount:

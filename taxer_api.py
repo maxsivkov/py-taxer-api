@@ -1,4 +1,6 @@
 import logging
+
+import marshmallow
 import requests
 import ujson
 from collections import namedtuple
@@ -71,7 +73,8 @@ class TaxerApi:
         json = self.execute('POST', 'api/finances/operation/load?lang={}'.format(self.lang), json={
             'userId': userId,
             'pageNumber': pageNumber,
-            'filters': filter
+            'filters': filter,
+            'sorting': '{date: "DESC"}'
         })
         schema = marshmallow_dataclass.class_schema(OperationsBrief)
         result: OperationsBrief = schema().load(json, partial=True, unknown=EXCLUDE)
@@ -95,17 +98,25 @@ class TaxerApi:
 
         return result
 
+    def add_operation_response_schema(self, userId:int):
+        return marshmallow.Schema.from_dict(
+            {
+                str(userId): fields.List(fields.Int(), default_factory=list)
+            })
     def add_operation(self, userId:int, op:OperationDetail) -> AddEntityResponse:
         exclude = ['operation.date', 'operation.uahDate']
         self.logger.debug('add_operation @ {} ->'.format(userId))
-        payload_schema = marshmallow_dataclass.class_schema(AddOperation, base_schema=IgnoreNoneSchema)
-        payload:AddOperation = AddOperation(userId, op)
+        payload_schema = marshmallow_dataclass.class_schema(AddOperations, base_schema=IgnoreNoneSchema)
+        payload:AddOperations = AddOperations([AddOperation(userId, op)])
         #print('payload raw ', payload)
-        #print('payload json ', payload_schema(exclude=exclude).dumps(payload, ensure_ascii=False))
-        json = self.execute('POST', 'api/finances/operation/create?lang={}'.format(self.lang), json=payload_schema(exclude=exclude).dump(payload))
+        #print('payload json ', payload_schema().dumps(payload, ensure_ascii=False))
+        json = self.execute('POST', 'api/finances/operation/create?lang={}'.format(self.lang), json=payload_schema().dump(payload))
         self.logger.debug('operations_detail @ {} <-'.format(userId))
-        schema = marshmallow_dataclass.class_schema(AddEntityResponse)
-        return schema().load(json, partial=True, unknown=EXCLUDE)
+        schema = self.add_operation_response_schema(userId)
+        result = schema().load(json)
+        #print('result ', result)
+        ids = result[str(userId)]
+        return AddEntityResponse(ids[0])
 
 
 
