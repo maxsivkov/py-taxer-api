@@ -293,6 +293,7 @@ document_contract_params = {
 """contract - Договор"""
 
 document_contract_model = Model('DocumentContract', {**document_brief_params, **document_contract_params})
+document_invoice_model = Model('DocumentContract', {**document_brief_params, **document_contract_params})
 add_document_contract_model = Model('AddDocumentContract', {**new_document_params, **document_contract_params})
 
 

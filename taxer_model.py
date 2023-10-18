@@ -35,7 +35,12 @@ class Account:
         unknown=EXCLUDE
 
 
-
+@dataclass
+class FileBrief:
+    id: int = field(default=None)
+    filename: str = field(default=None)
+    class Meta:
+        unknown=EXCLUDE
 #-----------------------------------------------------
 @dataclass
 class TimestampContent:
@@ -110,6 +115,7 @@ class Paginator:
     currentPage:int = field(default=None)
     recordsOnPage:int = field(default=None)
     totalPages:int = field(default=None)
+    totalRecords: int = field(default=None)
     class Meta:
         unknown=EXCLUDE
 
@@ -194,7 +200,7 @@ class Document(TimestampContent, ExpireTimestamp):
     actType: str = field(default=None)
     actPrintType: str = field(default=None)
     isForeign: int = field(default=None)
-    file:Dict[str,str] = field(default=None)
+    file:FileBrief = field(default=None)
 
     contents:List[DocumentContent] = field(default=None)
     """Resolve multiple inheritance"""

@@ -12,6 +12,9 @@ def doc2resource(op:str):
         return UserDocumentContract
     if s == 'act':
         return UserDocumentAct
+    if s == 'invoice':
+        return UserDocumentInvoice
+
     raise Exception("Document {} not known".format(op))
 
 @ns.route('/documents/page/<int:pageNumber>')
@@ -48,6 +51,18 @@ class UserDocumentContract(Resource):
     def get(self, userId:int, docId:int):
         '''Возвращает расширенные свойства контракта для профиля'''
         return app.taxerApi.document(userId, docId, 'contract')
+
+@ns.route('/document/invoice/<int:docId>')
+@ns.param('userId', 'Идентификатор профиля')
+@ns.param('docId', 'Идентификатор документа')
+@ns.response(500, 'Shit happens')
+class UserDocumentInvoice(Resource):
+    @ns.marshal_with(document_invoice_model)
+    def get(self, userId:int, docId:int):
+        '''Возвращает расширенные свойства инвойса для профиля'''
+        return app.taxerApi.document(userId, docId, 'invoice')
+
+
 @ns.route('/document/contract')
 @ns.param('userId', 'Идентификатор профиля')
 class UserDocumentContractList(Resource):
