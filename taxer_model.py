@@ -241,6 +241,7 @@ class OperationDetail(OperationBrief, TimestampContent, UahTimestampContent):
     uahAccount: OperationAccount = field(default=None)
     currencyAccount: OperationAccount = field(default=None)
     currencyTotal: Decimal = field(default=None)
+    calcExchangeDiff: bool = field(default=True)
 
     """Resolve multiple inheritance"""
     def __post_init__(self):
